@@ -149,6 +149,7 @@
         var modal = document.getElementById("myModal");
         var openModalLink = document.getElementById("openModalLink");
         var span = document.getElementsByClassName("close")[0];
+        var form = document.getElementById("popupForm");
 
         // When the user clicks the dropdown option, open the modal
         openModalLink.onclick = function(event) {
@@ -165,6 +166,22 @@
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
+            }
+        }
+
+        // When the form is submitted, ask for confirmation
+        form.onsubmit = function(event) {
+            event.preventDefault(); // Prevent the form from submitting immediately
+            
+            // Display a confirmation prompt
+            var confirmation = confirm("Do you want to submit the form?");
+            
+            if (confirmation) {
+                alert("Form submitted successfully!");
+                // Here you can perform the actual form submission (e.g., sending data via AJAX or reloading the page)
+                modal.style.display = "none"; // Close the modal
+            } else {
+                alert("Form submission canceled.");
             }
         }
     </script>
