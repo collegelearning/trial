@@ -3,8 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Popup Example</title>
+    <title>Dropdown and Modal Example</title>
     <style>
+        /* Navbar styles */
+        nav {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        nav .dropdown {
+            display: inline-block;
+            position: relative;
+        }
+
+        nav .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            min-width: 160px;
+            z-index: 1;
+        }
+
+        nav .dropdown-content a {
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+        }
+
+        nav .dropdown-content a:hover {
+            background-color: #575757;
+        }
+
+        nav .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
         /* The Modal (background) */
         .modal {
             display: none; /* Hidden by default */
@@ -72,8 +114,17 @@
 </head>
 <body>
 
-    <!-- Button to open the form popup -->
-    <button id="openModalBtn">Open Form</button>
+    <!-- Navbar with dropdown -->
+    <nav>
+        <a href="#">Home</a>
+        <div class="dropdown">
+            <a href="#">Options</a>
+            <div class="dropdown-content">
+                <a href="#" id="openModalLink">Open Form</a>
+            </div>
+        </div>
+        <a href="#">About</a>
+    </nav>
 
     <!-- The Modal -->
     <div id="myModal" class="modal">
@@ -96,11 +147,12 @@
     <script>
         // Get the modal, button, and close element
         var modal = document.getElementById("myModal");
-        var btn = document.getElementById("openModalBtn");
+        var openModalLink = document.getElementById("openModalLink");
         var span = document.getElementsByClassName("close")[0];
 
-        // When the user clicks the button, open the modal
-        btn.onclick = function() {
+        // When the user clicks the dropdown option, open the modal
+        openModalLink.onclick = function(event) {
+            event.preventDefault(); // Prevent the link from navigating
             modal.style.display = "block";
         }
 
