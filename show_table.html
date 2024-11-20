@@ -94,7 +94,7 @@
         "searching": true,
         "info": true,
         "columnDefs": [
-          { "visible": false, "targets": [0, 1, 2, 3, 4, 5] } // Hide first 6 columns by default
+          { "visible": false, "searchable": false, "targets": [0, 1, 2, 3, 4, 5] } // Hide and make first 6 columns not searchable
         ]
       });
 
@@ -116,7 +116,11 @@
       // Event listener for checkboxes
       $('#columnList input[type="checkbox"]').on('change', function() {
         var column = table.column($(this).data('column'));
-        column.visible($(this).is(':checked'));
+        var isVisible = $(this).is(':checked');
+        column.visible(isVisible);
+
+        // If the column is made visible, set it as searchable
+        column.searchable(isVisible);
       });
 
       // Close dropdown when clicking outside
