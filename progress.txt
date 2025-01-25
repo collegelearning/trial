@@ -1,0 +1,168 @@
+import os
+from flask import Flask, request, Response
+from docx import Document  # Install with: pip install python-docx
+
+app = Flask(__name__)
+
+@app.route("/process-folder", methods=["POST"])
+def process_folder():
+    def process():
+        files = request.form.getlist("files")
+        start_number = request.form.get("startNumber")
+
+        if not files or not start_number:
+            yield "Error: Folder or starting number not provided.\n"
+            return
+
+        start_number = int(start_number)
+        base_path = "./uploaded_folder"  # Simulated base path
+        os.makedirs(base_path, exist_ok=True)
+
+        # Sort files and group by subfolders
+        file_structure = {}
+        for file_path in files:
+            folder, filename = os.path.split(file_path)
+            if folder not in file_structure:
+                file_structure[folder] = []
+            if filename:
+                file_structure[folder].append(filename)
+
+        current_number = start_number
+
+        for folder, file_list in sorted(file_structure.items()):  # Process folders in order
+            doc_file = None
+            additional_item = None
+
+            # Identify the `.doc` file and any additional folder/file
+            for filename in file_list:
+                if filename.endswith(".doc"):
+                    doc_file = filename
+                elif os.path.isdir(os.path.join(base_path, folder, filename)) or os.path.isfile(os.path.join(base_path, folder, filename)):
+                    additional_item = filename
+
+            if doc_file:
+                old_doc_path = os.path.join(base_path, folder, doc_file)
+                new_folder_name = f"{current_number}"  # Rename parent folder
+                new_folder_path = os.path.join(base_path, new_folder_name)
+                os.makedirs(new_folder_path, exist_ok=True)
+
+                # Rename the `.doc` file
+                new_doc_filename = f"{current_number}.doc"
+                new_doc_path = os.path.join(new_folder_path, new_doc_filename)
+                os.rename(old_doc_path, new_doc_path)
+
+                # Modify content of the `.doc` file
+                document = Document(new_doc_path)
+                for paragraph in document.paragraphs:
+                    if "-" in paragraph.text:
+                        parts = paragraph.text.split("-", 1)  # Split at the first dash
+                        paragraph.text = f"{parts[0]}-{current_number}-{parts[1]}"  # Preserve text after the dash
+                        break  # Modify only the first paragraph with `-`
+                document.save(new_doc_path)
+
+                # Handle additional folder or file
+                if additional_item:
+                    old_additional_path = os.path.join(base_path, folder, additional_item)
+                    if os.path.isdir(old_additional_path):  # If it’s a folder
+                        new_inner_folder_name = f"A_{current_number}"
+                        new_inner_folder_path = os.path.join(new_folder_path, new_inner_folder_name)
+                        os.makedirs(new_inner_folder_path, exist_ok=True)
+
+                        # Rename files inside the folder
+                        inner_files = os.listdir(old_additional_path)
+                        inner_counter = 1
+                        for inner_file in inner_files:
+                            old_inner_file_path = os.path.join(old_additional_path, inner_file)
+                            if os.path.isfile(old_inner_file_path):  # Only rename files
+                                new_inner_file_name = f"A_{current_number}_{inner_counter}"
+                                new_inner_file_path = os.path.join(new_inner_folder_path, new_inner_file_name)
+                                os.rename(old_inner_file_path, new_inner_file_path)
+                                inner_counter += 1
+                    elif os.path.isfile(old_additional_path):  # If it’s a file
+                        file_extension = os.path.splitext(additional_item)[1]
+                        new_additional_filename = f"A_{current_number}{file_extension}"
+                        new_additional_path = os.path.join(new_folder_path, new_additional_filename)
+                        os.rename(old_additional_path, new_additional_path)
+
+                yield f"Processing folder {current_number}...\n"
+                current_number += 1
+
+        yield "Renaming completed!\n"
+
+    return Response(process(), mimetype="text/plain")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rename Folders and Files</title>
+    <style>
+        #progress {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 50%;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rename Folders and Files</h1>
+    <form id="folderForm">
+        <label for="folderInput">Select Parent Folder:</label>
+        <input type="file" id="folderInput" name="folder" webkitdirectory directory multiple required />
+        <label for="startNumber">Starting Number:</label>
+        <input type="number" id="startNumber" name="startNumber" required />
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="progress">Waiting for input...</div> <!-- Single-line progress display -->
+
+    <script>
+        document.getElementById("folderForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const folderInput = document.getElementById("folderInput");
+            const startNumber = document.getElementById("startNumber").value;
+            const progressDiv = document.getElementById("progress");
+
+            const files = folderInput.files;
+            if (files.length === 0 || !startNumber) {
+                alert("Please select a folder and provide a starting number.");
+                return;
+            }
+
+            const formData = new FormData();
+            Array.from(files).forEach(file => formData.append("files", file.webkitRelativePath));
+            formData.append("startNumber", startNumber);
+
+            progressDiv.innerHTML = "Processing started...";
+
+            const response = await fetch("/process-folder", {
+                method: "POST",
+                body: formData
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                progressDiv.innerHTML = decoder.decode(value);
+            }
+
+            alert("Renaming completed!");
+        });
+    </script>
+</body>
+</html>
