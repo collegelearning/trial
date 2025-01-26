@@ -1,0 +1,74 @@
+import os, shutil
+from docx import Document
+from datetime import datetime
+
+def process_wan_data(base_path, starting_number):
+    def update_w(id, starting_number):
+        print(f"Updated id : {id} with no : {starting_number} successfully!\n")
+
+    def rename_subfolders(path, month):
+        sub_files = sorted(os.scandir(path), key=lambda x: x.name)
+        sno = 1
+        for sub_file in sub_files:
+            format = os.path.splitext(sub_file.path)[1]
+            if format == ".docx" or format == ".doc":
+                new_name = f"Main_{starting_number}_1{format}"
+                new_path = os.path.join(path,new_name)
+                os.rename(sub_file.path, new_path)
+                doc = Document(new_path)
+                # Iterate through all paragraphs in the document
+                for paragraph in doc.paragraphs:
+                    if '-' in paragraph.text:  # Check if the paragraph contains a hyphen
+                        text = paragraph.text
+                        parts = text.split('-', 1)  # Split into two parts at the first hyphen
+                        new_text = f"{parts[0]}-{starting_number}/{month}{parts[1]}"
+                        paragraph.text = new_text
+                        break  # Stop after modifying the first occurrence
+
+                # Save the updated document
+                doc.save(new_path)
+            else:
+                new_name = f"Att_{starting_number}_{sno}{format}" 
+                new_path = os.path.join(path,new_name)
+                os.rename(sub_file.path, new_path)
+                sno += 1
+
+    folders = sorted(os.scandir(base_path), key=lambda x: x.name)
+    for folder in folders:
+        if os.path.isdir(folder):
+            month = folder.name.split('_')[1]
+            #Renaming the main subfolder
+            new_name = f"SNo-{starting_number}_{folder.name}"
+            new_path = os.path.join(base_path, new_name)
+            os.rename(folder.path, new_path)
+            rename_subfolders(new_path, month)
+
+            #Update
+            id = folder.name.split('_')[-1]
+            no = starting_number
+            update_w(id,no)
+            starting_number += 1
+
+            #Move
+            try:
+                parent = os.path.dirname(base_path)
+                shutil.move(new_path, parent)
+            except Exception:
+                print(f"The source file does not exist: {new_path}")
+
+
+
+    #Delete base_path as files have been copied outside to the parent folder
+    try:
+        os.rmdir(base_path)  # Deletes the folder only if it is empty
+        print(f"The folder '{base_path}' has been deleted.")
+    except Exception as e:
+        print(f"Error: {e}. The folder '{base_path}' is not empty or does not exist.")
+
+
+
+
+# Example usage:
+base_path = r'C:\Users\utkar\OneDrive\Desktop\data\Lot 1'  # Provide the path you want
+starting_number = 200
+process_wan_data(base_path, starting_number)
