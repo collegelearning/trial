@@ -69,6 +69,6 @@ def process_fan_data(base_path, starting_number):
 
 
 # Example usage:
-base_path = r'C:\Users\utkar\OneDrive\Desktop\data\Lot 1'  # Provide the path you want
+base_path = r'C:\Users\zen\OneDrive\Desktop\data\Lot 1'  # Provide the path you want
 starting_number = 200
 process_fan_data(base_path, starting_number)
