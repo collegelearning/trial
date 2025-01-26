@@ -2,7 +2,7 @@ import os, shutil
 from docx import Document
 from datetime import datetime
 
-def process_wan_data(base_path, starting_number):
+def process_fan_data(base_path, starting_number):
     def update_w(id, starting_number):
         print(f"Updated id : {id} with no : {starting_number} successfully!\n")
 
@@ -71,4 +71,4 @@ def process_wan_data(base_path, starting_number):
 # Example usage:
 base_path = r'C:\Users\utkar\OneDrive\Desktop\data\Lot 1'  # Provide the path you want
 starting_number = 200
-process_wan_data(base_path, starting_number)
+process_fan_data(base_path, starting_number)
