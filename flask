@@ -1,0 +1,13 @@
+import requests
+
+@app.route('/logout')
+def logout():
+    # Perform logout operations here...
+
+    # Send shutdown request to listener
+    try:
+        requests.post("http://127.0.0.1:7001/shutdown")
+    except requests.exceptions.RequestException:
+        pass  # Ignore errors if listener is already closed
+
+    return redirect(url_for('login'))  # Redirect user back to login page
